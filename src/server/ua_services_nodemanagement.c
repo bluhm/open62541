@@ -2247,6 +2247,14 @@ UA_Server_setMethodNode_callback(UA_Server *server,
 /* Lifecycle Management */
 /************************/
 
+void UA_EXPORT
+UA_Server_setGlobalNodeLifecycle(UA_Server *server,
+                                 UA_GlobalNodeLifecycle lifecycle,
+                                 void *adminContext) {
+    server->adminSession.sessionHandle = adminContext;
+    server->config.nodeLifecycle = lifecycle;
+}
+
 static UA_StatusCode
 setNodeTypeLifecycle(UA_Server *server, UA_Session *session,
                      UA_Node* node, UA_NodeTypeLifecycle *lifecycle) {
