@@ -168,6 +168,7 @@ typedef struct ConnectionEntry {
 
 typedef struct {
     const UA_Logger *logger;
+    const char *hostname;
     UA_UInt16 port;
     UA_UInt16 maxConnections;
     UA_SOCKET serverSockets[FD_SETSIZE];
@@ -355,7 +356,7 @@ addServerSocket(ServerNetworkLayerTCP *layer, struct addrinfo *ai) {
 
 static UA_StatusCode
 ServerNetworkLayerTCP_start(UA_ServerNetworkLayer *nl, const UA_String *customHostname) {
-  UA_initialize_architecture_network();
+    UA_initialize_architecture_network();
 
     ServerNetworkLayerTCP *layer = (ServerNetworkLayerTCP *)nl->handle;
 
@@ -368,7 +369,7 @@ ServerNetworkLayerTCP_start(UA_ServerNetworkLayer *nl, const UA_String *customHo
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     hints.ai_protocol = IPPROTO_TCP;
-    if(UA_getaddrinfo(NULL, portno, &hints, &res) != 0)
+    if(UA_getaddrinfo(layer->hostname, portno, &hints, &res) != 0)
         return UA_STATUSCODE_BADINTERNALERROR;
 
     /* There might be serveral addrinfos (for different network cards,
@@ -594,6 +595,7 @@ UA_ServerNetworkLayerTCP(UA_ConnectionConfig config, UA_UInt16 port,
     nl.handle = layer;
 
     layer->logger = logger;
+    layer->hostname = NULL;
     layer->port = port;
     layer->maxConnections = maxConnections;
 
