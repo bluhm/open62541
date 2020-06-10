@@ -768,7 +768,7 @@ UA_Client_findCustomCallback(UA_Client *client, UA_UInt32 requestId) {
 
 static
 void ValueAttributeRead(UA_Client *client, void *userdata,
-                        UA_UInt32 requestId, void *response) {
+                        UA_UInt32 requestId, UA_Response *response) {
     if(!response)
         return;
 
@@ -776,31 +776,41 @@ void ValueAttributeRead(UA_Client *client, void *userdata,
     CustomCallback *cc = UA_Client_findCustomCallback(client, requestId);
     if(!cc)
         return;
+    UA_ClientAsyncAttributeCallback callback =
+        (UA_ClientAsyncAttributeCallback)cc->userCallback;
 
     UA_ReadResponse *rr = (UA_ReadResponse *) response;
-    UA_DataValue *res = rr->results;
+    UA_StatusCode retval = rr->responseHeader.serviceResult;
     UA_Boolean done = false;
-    AsyncReadData *data = (AsyncReadData *)cc->clientData;
-    if(rr->resultsSize == 1 && res != NULL && res->hasValue) {
-        if(data->attributeId == UA_ATTRIBUTEID_VALUE) {
-            /* Call directly with the variant */
-            cc->userCallback(client, cc->userData, requestId, &res->value);
-            done = true;
-        } else if(UA_Variant_isScalar(&res->value) &&
-                  res->value.type == data->outDataType) {
-            /* Unpack the value */
-            UA_STACKARRAY(UA_Byte, value, data->outDataType->memSize);
-            memcpy(&value, res->value.data, data->outDataType->memSize);
-            cc->userCallback(client, cc->userData, requestId, &value);
-            done = true;
+    if(retval == UA_STATUSCODE_GOOD) {
+        UA_DataValue *res = rr->results;
+        AsyncReadData *data = (AsyncReadData *)cc->clientData;
+        if(rr->resultsSize == 1 && res != NULL && res->hasValue) {
+            if(data->attributeId == UA_ATTRIBUTEID_VALUE) {
+                /* Call directly with the variant */
+                callback(client, cc->userData, requestId, &res->value, retval);
+                done = true;
+            } else if(UA_Variant_isScalar(&res->value) &&
+                      res->value.type == data->outDataType) {
+                /* Unpack the value */
+                UA_STACKARRAY(UA_Byte, value, data->outDataType->memSize);
+                memcpy(&value, res->value.data, data->outDataType->memSize);
+                callback(client, cc->userData, requestId, &value, retval);
+                done = true;
+            }
         }
     }
 
-    /* Could not process, delete the callback anyway */
-    if(!done)
+    /* Could not process, run the callback anyway, but without value */
+    if(!done) {
+        if(retval == UA_STATUSCODE_GOOD)
+            retval = UA_STATUSCODE_BADUNEXPECTEDERROR;
         UA_LOG_INFO(&client->config.logger, UA_LOGCATEGORY_CLIENT,
                     "Cannot process the response to the async read "
-                    "request %" PRIu32, requestId);
+                    "request %" PRIu32 " error %s",
+                    requestId, UA_StatusCode_name(retval));
+        callback(client, cc->userData, requestId, NULL, retval);
+    }
 
     UA_free(cc->clientData);
     LIST_REMOVE(cc, pointers);
@@ -811,7 +821,8 @@ void ValueAttributeRead(UA_Client *client, void *userdata,
 UA_StatusCode
 __UA_Client_readAttribute_async(UA_Client *client,
         const UA_NodeId *nodeId, UA_AttributeId attributeId,
-        const UA_DataType *outDataType, UA_ClientAsyncServiceCallback callback,
+        const UA_DataType *outDataType,
+        UA_ClientAsyncAttributeCallback callback,
         void *userdata, UA_UInt32 *reqId) {
     UA_ReadValueId item;
     UA_ReadValueId_init(&item);
@@ -826,7 +837,7 @@ __UA_Client_readAttribute_async(UA_Client *client,
     if (!cc)
         return UA_STATUSCODE_BADOUTOFMEMORY;
     memset(cc, 0, sizeof(CustomCallback));
-    cc->userCallback = callback;
+    cc->userCallback = (UA_ClientAsyncServiceCallback)callback;
     cc->userData = userdata;
 
     cc->clientData = UA_malloc(sizeof(AsyncReadData));
