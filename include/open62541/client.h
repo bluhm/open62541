@@ -485,8 +485,9 @@ UA_Client_Service_queryNext(UA_Client *client,
  *
  * The userdata and requestId arguments can be NULL. */
 
+union UA_Response;
 typedef void (*UA_ClientAsyncServiceCallback)(UA_Client *client, void *userdata,
-        UA_UInt32 requestId, void *response);
+        UA_UInt32 requestId, union UA_Response *response);
 
 UA_StatusCode UA_EXPORT
 __UA_Client_AsyncService(UA_Client *client, const void *request,

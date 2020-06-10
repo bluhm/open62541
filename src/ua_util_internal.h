@@ -105,7 +105,7 @@ typedef union {
 #endif
 } UA_Request;
 
-typedef union {
+typedef union UA_Response {
     UA_ResponseHeader responseHeader;
     UA_FindServersResponse findServersResponse;
     UA_GetEndpointsResponse getEndpointsResponse;

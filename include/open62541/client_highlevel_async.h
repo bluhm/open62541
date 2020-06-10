@@ -54,17 +54,21 @@ UA_Client_sendAsyncBrowseRequest(UA_Client *client, UA_BrowseRequest *request,
 /**
  * Read Attribute
  * ^^^^^^^^^^^^^^ */
+
+typedef void (*UA_ClientAsyncAttributeCallback)(UA_Client *client, void *userdata,
+    UA_UInt32 requestId, void *result, UA_StatusCode statusCode);
 UA_StatusCode UA_EXPORT
 __UA_Client_readAttribute_async(UA_Client *client, const UA_NodeId *nodeId,
                                 UA_AttributeId attributeId,
                                 const UA_DataType *outDataType,
-                                UA_ClientAsyncServiceCallback callback, void *userdata,
+                                UA_ClientAsyncAttributeCallback callback, void *userdata,
                                 UA_UInt32 *reqId);
 
 typedef void (*UA_ClientAsyncReadDataTypeAttributeCallback)(UA_Client *client,
                                                             void *userdata,
                                                             UA_UInt32 requestId,
-                                                            UA_NodeId *var);
+                                                            UA_NodeId *var,
+                                                            UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readDataTypeAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -72,38 +76,41 @@ UA_Client_readDataTypeAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_DATATYPE, &UA_TYPES[UA_TYPES_NODEID],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 
 typedef void (*UA_ClientAsyncReadValueAttributeCallback)(UA_Client *client,
                                                          void *userdata,
                                                          UA_UInt32 requestId,
-                                                         UA_Variant *var);
+                                                         UA_Variant *var,
+                                                         UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readValueAttribute_async(UA_Client *client, const UA_NodeId nodeId,
                                    UA_ClientAsyncReadValueAttributeCallback callback,
                                    void *userdata, UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_VALUE, &UA_TYPES[UA_TYPES_VARIANT],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 
 typedef void (*UA_ClientAsyncReadNodeIdAttributeCallback)(UA_Client *client,
                                                           void *userdata,
                                                           UA_UInt32 requestId,
-                                                          UA_NodeId *out);
+                                                          UA_NodeId *out,
+                                                          UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readNodeIdAttribute_async(UA_Client *client, const UA_NodeId nodeId,
                                     UA_ClientAsyncReadNodeIdAttributeCallback callback,
                                     void *userdata, UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_NODEID, &UA_TYPES[UA_TYPES_NODEID],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadNodeClassAttributeCallback)(UA_Client *client,
                                                              void *userdata,
                                                              UA_UInt32 requestId,
-                                                             UA_NodeClass *out);
+                                                             UA_NodeClass *out,
+                                                             UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readNodeClassAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -111,12 +118,13 @@ UA_Client_readNodeClassAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_NODECLASS, &UA_TYPES[UA_TYPES_NODECLASS],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadBrowseNameAttributeCallback)(UA_Client *client,
                                                               void *userdata,
                                                               UA_UInt32 requestId,
-                                                              UA_QualifiedName *out);
+                                                              UA_QualifiedName *out,
+                                                              UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readBrowseNameAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -124,12 +132,13 @@ UA_Client_readBrowseNameAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_BROWSENAME, &UA_TYPES[UA_TYPES_QUALIFIEDNAME],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadDisplayNameAttributeCallback)(UA_Client *client,
                                                                void *userdata,
                                                                UA_UInt32 requestId,
-                                                               UA_LocalizedText *out);
+                                                               UA_LocalizedText *out,
+                                                               UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readDisplayNameAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -137,12 +146,13 @@ UA_Client_readDisplayNameAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_DISPLAYNAME, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadDescriptionAttributeCallback)(UA_Client *client,
                                                                void *userdata,
                                                                UA_UInt32 requestId,
-                                                               UA_LocalizedText *out);
+                                                               UA_LocalizedText *out,
+                                                               UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readDescriptionAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -150,12 +160,13 @@ UA_Client_readDescriptionAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_DESCRIPTION, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadWriteMaskAttributeCallback)(UA_Client *client,
                                                              void *userdata,
                                                              UA_UInt32 requestId,
-                                                             UA_UInt32 *out);
+                                                             UA_UInt32 *out,
+                                                             UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readWriteMaskAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -163,12 +174,13 @@ UA_Client_readWriteMaskAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_WRITEMASK, &UA_TYPES[UA_TYPES_UINT32],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadUserWriteMaskAttributeCallback)(UA_Client *client,
                                                                  void *userdata,
                                                                  UA_UInt32 requestId,
-                                                                 UA_UInt32 *out);
+                                                                 UA_UInt32 *out,
+                                                                 UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readUserWriteMaskAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -176,12 +188,13 @@ UA_Client_readUserWriteMaskAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_USERWRITEMASK, &UA_TYPES[UA_TYPES_UINT32],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadIsAbstractAttributeCallback)(UA_Client *client,
                                                               void *userdata,
                                                               UA_UInt32 requestId,
-                                                              UA_Boolean *out);
+                                                              UA_Boolean *out,
+                                                              UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readIsAbstractAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -189,12 +202,13 @@ UA_Client_readIsAbstractAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_ISABSTRACT, &UA_TYPES[UA_TYPES_BOOLEAN],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadSymmetricAttributeCallback)(UA_Client *client,
                                                              void *userdata,
                                                              UA_UInt32 requestId,
-                                                             UA_Boolean *out);
+                                                             UA_Boolean *out,
+                                                             UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readSymmetricAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -202,12 +216,13 @@ UA_Client_readSymmetricAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_SYMMETRIC, &UA_TYPES[UA_TYPES_BOOLEAN],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadInverseNameAttributeCallback)(UA_Client *client,
                                                                void *userdata,
                                                                UA_UInt32 requestId,
-                                                               UA_LocalizedText *out);
+                                                               UA_LocalizedText *out,
+                                                               UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readInverseNameAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -215,12 +230,13 @@ UA_Client_readInverseNameAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_INVERSENAME, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadContainsNoLoopsAttributeCallback)(UA_Client *client,
                                                                    void *userdata,
                                                                    UA_UInt32 requestId,
-                                                                   UA_Boolean *out);
+                                                                   UA_Boolean *out,
+                                                                   UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readContainsNoLoopsAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -228,12 +244,13 @@ UA_Client_readContainsNoLoopsAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_CONTAINSNOLOOPS, &UA_TYPES[UA_TYPES_BOOLEAN],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadEventNotifierAttributeCallback)(UA_Client *client,
                                                                  void *userdata,
                                                                  UA_UInt32 requestId,
-                                                                 UA_Byte *out);
+                                                                 UA_Byte *out,
+                                                                 UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readEventNotifierAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -241,12 +258,13 @@ UA_Client_readEventNotifierAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_EVENTNOTIFIER, &UA_TYPES[UA_TYPES_BYTE],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadValueRankAttributeCallback)(UA_Client *client,
                                                              void *userdata,
                                                              UA_UInt32 requestId,
-                                                             UA_Int32 *out);
+                                                             UA_Int32 *out,
+                                                             UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readValueRankAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -254,12 +272,13 @@ UA_Client_readValueRankAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_VALUERANK, &UA_TYPES[UA_TYPES_INT32],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadAccessLevelAttributeCallback)(UA_Client *client,
                                                                void *userdata,
                                                                UA_UInt32 requestId,
-                                                               UA_Byte *out);
+                                                               UA_Byte *out,
+                                                               UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readAccessLevelAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -267,12 +286,13 @@ UA_Client_readAccessLevelAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_ACCESSLEVEL, &UA_TYPES[UA_TYPES_BYTE],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadUserAccessLevelAttributeCallback)(UA_Client *client,
                                                                    void *userdata,
                                                                    UA_UInt32 requestId,
-                                                                   UA_Byte *out);
+                                                                   UA_Byte *out,
+                                                                   UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readUserAccessLevelAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -280,10 +300,11 @@ UA_Client_readUserAccessLevelAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_USERACCESSLEVEL, &UA_TYPES[UA_TYPES_BYTE],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadMinimumSamplingIntervalAttributeCallback)(
-    UA_Client *client, void *userdata, UA_UInt32 requestId, UA_Double *out);
+    UA_Client *client, void *userdata, UA_UInt32 requestId, UA_Double *out,
+    UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readMinimumSamplingIntervalAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -291,13 +312,14 @@ UA_Client_readMinimumSamplingIntervalAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_MINIMUMSAMPLINGINTERVAL,
-        &UA_TYPES[UA_TYPES_DOUBLE], (UA_ClientAsyncServiceCallback)callback, userdata,
+        &UA_TYPES[UA_TYPES_DOUBLE], (UA_ClientAsyncAttributeCallback)callback, userdata,
         reqId);
 }
 typedef void (*UA_ClientAsyncReadHistorizingAttributeCallback)(UA_Client *client,
                                                                void *userdata,
                                                                UA_UInt32 requestId,
-                                                               UA_Boolean *out);
+                                                               UA_Boolean *out,
+                                                               UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readHistorizingAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -305,12 +327,13 @@ UA_Client_readHistorizingAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_HISTORIZING, &UA_TYPES[UA_TYPES_BOOLEAN],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadExecutableAttributeCallback)(UA_Client *client,
                                                               void *userdata,
                                                               UA_UInt32 requestId,
-                                                              UA_Boolean *out);
+                                                              UA_Boolean *out,
+                                                              UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readExecutableAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -318,12 +341,13 @@ UA_Client_readExecutableAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_EXECUTABLE, &UA_TYPES[UA_TYPES_BOOLEAN],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 typedef void (*UA_ClientAsyncReadUserExecutableAttributeCallback)(UA_Client *client,
                                                                   void *userdata,
                                                                   UA_UInt32 requestId,
-                                                                  UA_Boolean *out);
+                                                                  UA_Boolean *out,
+                                                                  UA_StatusCode statusCode);
 static UA_INLINE UA_StatusCode
 UA_Client_readUserExecutableAttribute_async(
     UA_Client *client, const UA_NodeId nodeId,
@@ -331,7 +355,7 @@ UA_Client_readUserExecutableAttribute_async(
     UA_UInt32 *reqId) {
     return __UA_Client_readAttribute_async(
         client, &nodeId, UA_ATTRIBUTEID_USEREXECUTABLE, &UA_TYPES[UA_TYPES_BOOLEAN],
-        (UA_ClientAsyncServiceCallback)callback, userdata, reqId);
+        (UA_ClientAsyncAttributeCallback)callback, userdata, reqId);
 }
 /**
  * Write Attribute
