@@ -1253,7 +1253,7 @@ recursiveCallConstructors(UA_Server *server, UA_Session *session,
     const UA_Node *node = UA_NODESTORE_GET(server, nodeId);
     if(!node)
         return UA_STATUSCODE_BADNODEIDUNKNOWN;
-    void *context = node->head.context;
+    void **context = &node->head.context;
     UA_NODESTORE_RELEASE(server, node);
 
     /* Call the global constructor */
@@ -1261,7 +1261,7 @@ recursiveCallConstructors(UA_Server *server, UA_Session *session,
         UA_UNLOCK(&server->serviceMutex);
         retval = server->config.nodeLifecycle.
             constructor(server, &session->sessionId,
-                        session->sessionHandle, nodeId, &context);
+                        session->sessionHandle, nodeId, context);
         UA_LOCK(&server->serviceMutex);
         if(retval != UA_STATUSCODE_GOOD)
             return retval;
@@ -1277,7 +1277,7 @@ recursiveCallConstructors(UA_Server *server, UA_Session *session,
         UA_UNLOCK(&server->serviceMutex);
         retval = lifecycle->constructor(server, &session->sessionId,
                                         session->sessionHandle, &type->head.nodeId,
-                                        type->head.context, nodeId, &context);
+                                        type->head.context, nodeId, context);
         UA_LOCK(&server->serviceMutex);
         if(retval != UA_STATUSCODE_GOOD)
             goto global_destructor;
@@ -1285,7 +1285,7 @@ recursiveCallConstructors(UA_Server *server, UA_Session *session,
 
     /* Set the context *and* mark the node as constructed */
     retval = UA_Server_editNode(server, &server->adminSession, nodeId,
-                                (UA_EditNodeCallback)setConstructedNodeContext, context);
+                                (UA_EditNodeCallback)setConstructedNodeContext, *context);
     if(retval != UA_STATUSCODE_GOOD)
         goto local_destructor;
 
@@ -1297,7 +1297,7 @@ recursiveCallConstructors(UA_Server *server, UA_Session *session,
     if(lifecycle && lifecycle->destructor) {
         UA_UNLOCK(&server->serviceMutex);
         lifecycle->destructor(server, &session->sessionId, session->sessionHandle,
-                              &type->head.nodeId, type->head.context, nodeId, &context);
+                              &type->head.nodeId, type->head.context, nodeId, context);
         UA_LOCK(&server->serviceMutex);
     }
 
@@ -1306,7 +1306,7 @@ recursiveCallConstructors(UA_Server *server, UA_Session *session,
         UA_UNLOCK(&server->serviceMutex);
         server->config.nodeLifecycle.destructor(server, &session->sessionId,
                                                 session->sessionHandle,
-                                                nodeId, context);
+                                                nodeId, *context);
         UA_LOCK(&server->serviceMutex);
     }
     return retval;
@@ -1739,7 +1739,7 @@ deconstructNodeSet(UA_Server *server, UA_Session *session,
             continue;
 
         /* Call the type-level destructor */
-        void *context = member->head.context; /* No longer needed after this function */
+        void **context = &member->head.context; /* No longer needed after this function */
         if(member->head.nodeClass == UA_NODECLASS_OBJECT ||
            member->head.nodeClass == UA_NODECLASS_VARIABLE) {
             const UA_Node *type = getNodeType(server, &member->head);
@@ -1757,7 +1757,7 @@ deconstructNodeSet(UA_Server *server, UA_Session *session,
                   lifecycle->destructor(server,
                                         &session->sessionId, session->sessionHandle,
                                         &type->head.nodeId, type->head.context,
-                                        &member->head.nodeId, &context);
+                                        &member->head.nodeId, context);
                   UA_LOCK(&server->serviceMutex);
                }
 
@@ -1771,7 +1771,7 @@ deconstructNodeSet(UA_Server *server, UA_Session *session,
             UA_UNLOCK(&server->serviceMutex);
             server->config.nodeLifecycle.destructor(server, &session->sessionId,
                                                     session->sessionHandle,
-                                                    &member->head.nodeId, context);
+                                                    &member->head.nodeId, *context);
             UA_LOCK(&server->serviceMutex);
         }
 
